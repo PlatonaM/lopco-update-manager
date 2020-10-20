@@ -45,6 +45,13 @@ class Conf:
         api = "protocol-adapters"
 
     @simple_env_var.section
+    class Update:
+        interval = 120
+        hour = 1
+        minute = 30
+        second = 0
+
+    @simple_env_var.section
     class Logger:
         level = "info"
 
