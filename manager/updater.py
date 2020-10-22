@@ -76,15 +76,12 @@ class Updater(threading.Thread):
         images = conf.Core.images.split(";")
         for image in images:
             try:
+                logger.debug(image)
                 if self.__checkUpdate(image):
-                    if image not in self.available_updates:
-                        self.available_updates[image] = {
-                            model.Update.type: model.UpdateType.core,
-                            model.Update.entities: dict()
-                        }
-                else:
-                    if image in self.available_updates:
-                        del self.available_updates[image]
+                    self.available_updates[image] = {
+                        model.Update.type: model.UpdateType.core,
+                        model.Update.entities: list()
+                    }
             except CheckUpdateError as ex:
                 logger.warning("update check for '{}' failed - {}".format(image, ex))
 
@@ -96,20 +93,15 @@ class Updater(threading.Thread):
                 image = value["image"]
                 try:
                     logger.debug(image)
-                    if self.__checkUpdate(image):
-                        if image not in self.available_updates:
+                    if image not in self.available_updates:
+                        if self.__checkUpdate(image):
                             self.available_updates[image] = {
                                 model.Update.type: type,
-                                model.Update.entities: {key: {model.Entity.name: value["name"]}}
+                                model.Update.entities: [key]
                             }
-                        else:
-                            if key not in self.available_updates[image][model.Update.entities]:
-                                self.available_updates[image][model.Update.entities][key] = {
-                                    model.Entity.name: value["name"]
-                                }
                     else:
-                        if image in self.available_updates:
-                            del self.available_updates[image]
+                        if key not in self.available_updates[image][model.Update.entities]:
+                            self.available_updates[image][model.Update.entities].append(key)
                 except CheckUpdateError as ex:
                     logger.warning("update check for '{}' failed - {}".format(image, ex))
 
@@ -117,6 +109,7 @@ class Updater(threading.Thread):
         while True:
             time.sleep(getDelay())
             try:
+                self.available_updates.clear()
                 self.__checkCoreImages()
                 self.__checkUserImages(
                     "{}/{}".format(conf.ProtocolAdapterRegistry.url, conf.ProtocolAdapterRegistry.api),
