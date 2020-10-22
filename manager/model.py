@@ -32,4 +32,3 @@ class UpdateType:
 
 class Entity:
     name = "name"
-
