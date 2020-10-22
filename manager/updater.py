@@ -112,20 +112,31 @@ class Updater(threading.Thread):
                 except CheckUpdateError as ex:
                     logger.warning("update check for '{}' failed - {}".format(image, ex))
 
+    def __checkUpdates(self):
+        logger.info("checking for updates ...")
+        try:
+            self.__lock.acquire()
+            self.__available_updates.clear()
+            self.__checkCoreImages()
+            self.__checkUserImages(
+                "{}/{}".format(conf.ProtocolAdapterRegistry.url, conf.ProtocolAdapterRegistry.api),
+                model.UpdateType.protocol_adapter
+            )
+            self.__checkUserImages(
+                "{}/{}".format(conf.WorkerRegistry.url, conf.WorkerRegistry.api),
+                model.UpdateType.worker
+            )
+            self.__lock.release()
+        except Exception as ex:
+            self.__available_updates.clear()
+            self.__lock.release()
+            raise CheckUpdatesError("checking for updates failed - {}".format(ex))
+
     def run(self) -> None:
         while True:
-            time.sleep(getDelay())
             try:
-                self.available_updates.clear()
-                self.__checkCoreImages()
-                self.__checkUserImages(
-                    "{}/{}".format(conf.ProtocolAdapterRegistry.url, conf.ProtocolAdapterRegistry.api),
-                    model.UpdateType.protocol_adapter
-                )
-                self.__checkUserImages(
-                    "{}/{}".format(conf.WorkerRegistry.url, conf.WorkerRegistry.api),
-                    model.UpdateType.worker
-                )
-                logger.debug(self.available_updates)
+                time.sleep(getDelay())
+                logger.info("starting automatic update check ...")
+                self.__checkUpdates()
             except Exception as ex:
-                logger.exception("error during update check:".format(ex))
+                logger.error("automatic update check failed - {}".format(ex))
