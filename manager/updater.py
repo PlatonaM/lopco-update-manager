@@ -15,7 +15,7 @@
 """
 
 
-__all__ = ("Updater", )
+__all__ = ("Updater", "UpdaterError", "CheckUpdatesError", "UpdateCheckInProgress")
 
 
 from . import model
