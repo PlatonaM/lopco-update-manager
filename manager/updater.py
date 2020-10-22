@@ -41,7 +41,7 @@ class Updater(threading.Thread):
         super().__init__(name="updater", daemon=True)
         self.available_updates = dict()
 
-    def __checkUpdate(self, image: str) -> bool:
+    def __checkImage(self, image: str) -> bool:
         try:
             resp = requests.get(
                 url="{}/{}/{}".format(
@@ -78,7 +78,7 @@ class Updater(threading.Thread):
         for image in images:
             try:
                 logger.debug(image)
-                if self.__checkUpdate(image):
+                if self.__checkImage(image):
                     self.available_updates[image] = {
                         model.Update.type: model.UpdateType.core,
                         model.Update.entities: list(),
@@ -96,7 +96,7 @@ class Updater(threading.Thread):
                 try:
                     logger.debug(image)
                     if image not in self.available_updates:
-                        if self.__checkUpdate(image):
+                        if self.__checkImage(image):
                             self.available_updates[image] = {
                                 model.Update.type: type,
                                 model.Update.entities: [key],
