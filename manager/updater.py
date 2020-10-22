@@ -22,6 +22,7 @@ from . import model
 from .logger import getLogger
 from .configuration import conf
 from .util import getDelay
+import urllib.parse
 import threading
 import datetime
 import requests
@@ -55,7 +56,7 @@ class Updater(threading.Thread):
             url="{}/{}/{}".format(
                 conf.DeploymentManager.url,
                 conf.DeploymentManager.img_api,
-                image.replace("/", "%252F")
+                urllib.parse.quote(urllib.parse.quote(image, safe=''))
             )
         )
         if resp.ok:
@@ -65,7 +66,7 @@ class Updater(threading.Thread):
                 url="{}/{}/{}".format(
                     conf.DeploymentManager.url,
                     conf.DeploymentManager.dig_api,
-                    image.replace("/", "%252F")
+                    urllib.parse.quote(urllib.parse.quote(image, safe=''))
                 )
             )
             if resp.ok:
