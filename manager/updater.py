@@ -23,6 +23,7 @@ from .logger import getLogger
 from .configuration import conf
 from .util import getDelay
 import threading
+import datetime
 import requests
 import time
 import json
@@ -80,7 +81,8 @@ class Updater(threading.Thread):
                 if self.__checkUpdate(image):
                     self.available_updates[image] = {
                         model.Update.type: model.UpdateType.core,
-                        model.Update.entities: list()
+                        model.Update.entities: list(),
+                        model.Update.time: '{}Z'.format(datetime.datetime.utcnow().isoformat())
                     }
             except CheckUpdateError as ex:
                 logger.warning("update check for '{}' failed - {}".format(image, ex))
@@ -97,7 +99,8 @@ class Updater(threading.Thread):
                         if self.__checkUpdate(image):
                             self.available_updates[image] = {
                                 model.Update.type: type,
-                                model.Update.entities: [key]
+                                model.Update.entities: [key],
+                                model.Update.time: '{}Z'.format(datetime.datetime.utcnow().isoformat())
                             }
                     else:
                         if key not in self.available_updates[image][model.Update.entities]:
