@@ -46,7 +46,7 @@ class Conf:
 
     @simple_env_var.section
     class Update:
-        interval = 120
+        interval = 10800
         hour = 1
         minute = 30
         second = 0
