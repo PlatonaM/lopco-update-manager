@@ -32,7 +32,11 @@ import json
 logger = getLogger(__name__.split(".", 1)[-1])
 
 
-class CheckUpdateError(Exception):
+class UpdaterError(Exception):
+    pass
+
+
+class CheckUpdatesError(UpdaterError):
     pass
 
 
