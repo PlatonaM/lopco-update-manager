@@ -46,36 +46,33 @@ class Updater(threading.Thread):
         self.available_updates = dict()
 
     def __checkImage(self, image: str) -> bool:
-        try:
+        resp = requests.get(
+            url="{}/{}/{}".format(
+                conf.DeploymentManager.url,
+                conf.DeploymentManager.img_api,
+                image.replace("/", "%252F")
+            )
+        )
+        if resp.ok:
+            image_digests = resp.json()["digests"]
+            image_digests = ",".join(image_digests)
             resp = requests.get(
                 url="{}/{}/{}".format(
                     conf.DeploymentManager.url,
-                    conf.DeploymentManager.img_api,
+                    conf.DeploymentManager.dig_api,
                     image.replace("/", "%252F")
                 )
             )
             if resp.ok:
-                image_digests = resp.json()["digests"]
-                image_digests = ",".join(image_digests)
-                resp = requests.get(
-                    url="{}/{}/{}".format(
-                        conf.DeploymentManager.url,
-                        conf.DeploymentManager.dig_api,
-                        image.replace("/", "%252F")
-                    )
-                )
-                if resp.ok:
-                    remote_image_digest = resp.json()["digest"]
-                    if remote_image_digest not in image_digests:
-                        return True
-                    else:
-                        return False
+                remote_image_digest = resp.json()["digest"]
+                if remote_image_digest not in image_digests:
+                    return True
                 else:
-                    raise RuntimeError("{} - {}".format(resp.url, resp.status_code))
+                    return False
             else:
                 raise RuntimeError("{} - {}".format(resp.url, resp.status_code))
-        except Exception as ex:
-            raise CheckUpdateError(ex)
+        else:
+            raise RuntimeError("{} - {}".format(resp.url, resp.status_code))
 
     def __checkCoreImages(self):
         images = conf.Core.images.split(";")
