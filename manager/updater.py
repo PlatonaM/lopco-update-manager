@@ -40,6 +40,10 @@ class CheckUpdatesError(UpdaterError):
     pass
 
 
+class UpdateCheckInProgress(UpdaterError):
+    pass
+
+
 class Updater(threading.Thread):
     def __init__(self):
         super().__init__(name="updater", daemon=True)
@@ -139,8 +143,7 @@ class Updater(threading.Thread):
 
     def getAvailableUpdates(self, refresh: bool = False) -> dict:
         if self.__lock.locked():
-            logger.warning("currently checking for updates")
-            return dict()
+            raise UpdateCheckInProgress("currently checking for updates")
         else:
             if refresh:
                 self.__checkUpdates()
