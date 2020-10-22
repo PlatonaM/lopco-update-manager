@@ -136,3 +136,12 @@ class Updater(threading.Thread):
                 self.__checkUpdates()
             except Exception as ex:
                 logger.error("automatic update check failed - {}".format(ex))
+
+    def getAvailableUpdates(self, refresh: bool = False) -> dict:
+        if self.__lock.locked():
+            logger.warning("currently checking for updates")
+            return dict()
+        else:
+            if refresh:
+                self.__checkUpdates()
+            return self.__available_updates
