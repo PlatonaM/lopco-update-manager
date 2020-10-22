@@ -21,6 +21,7 @@ __all__ = ("Update", "UpdateType", "Entity")
 class Update:
     type = "type"
     entities = "entities"
+    time = "time"
 
 
 class UpdateType:
