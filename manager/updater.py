@@ -45,6 +45,14 @@ class UpdateCheckInProgress(UpdaterError):
     pass
 
 
+class NotFound(UpdaterError):
+    pass
+
+
+class UpdateError(UpdaterError):
+    pass
+
+
 class Updater(threading.Thread):
     def __init__(self):
         super().__init__(name="updater", daemon=True)
