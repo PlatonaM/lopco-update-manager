@@ -18,7 +18,7 @@ __all__ = ("Updates", "Update")
 
 
 from .logger import getLogger
-from .updater import Updater, UpdateCheckInProgress
+from .updater import Updater, UpdateCheckInProgress, NotFound
 import falcon
 import json
 
@@ -62,3 +62,29 @@ class Updates:
         except Exception as ex:
             resp.status = falcon.HTTP_500
             reqErrorLog(req, ex)
+
+
+class Update:
+    def __init__(self, updater: Updater):
+        self.__updater = updater
+
+    def on_patch(self, req: falcon.request.Request, resp: falcon.response.Response, update):
+        reqDebugLog(req)
+        if not req.content_type == falcon.MEDIA_JSON:
+            resp.status = falcon.HTTP_415
+        else:
+            try:
+                self.__updater.update(falcon.uri.decode(update))
+                resp.status = falcon.HTTP_200
+            except UpdateCheckInProgress as ex:
+                resp.status = falcon.HTTP_503
+                reqErrorLog(req, ex)
+            except NotFound as ex:
+                resp.status = falcon.HTTP_404
+                reqErrorLog(req, ex)
+            except ValueError as ex:
+                resp.status = falcon.HTTP_400
+                reqErrorLog(req, ex)
+            except Exception as ex:
+                resp.status = falcon.HTTP_500
+                reqErrorLog(req, ex)
