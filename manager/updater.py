@@ -157,3 +157,27 @@ class Updater(threading.Thread):
             if refresh:
                 self.__checkUpdates()
             return self.__available_updates
+
+    def update(self, image: str):
+        if self.__lock.locked():
+            raise UpdateCheckInProgress("currently checking for updates")
+        else:
+            if image not in self.__available_updates:
+                raise NotFound("no update for '{}' available".format(image))
+            repo, tag = image.rsplit(":", 1)
+            if "/" in tag:
+                raise ValueError("no image tag provided")
+            resp = requests.post(
+                url="{}/{}".format(conf.DeploymentManager.url, conf.DeploymentManager.img_api),
+                json={"repository": repo, "tag": tag}
+            )
+            if resp.ok:
+                if self.__available_updates[image][model.Update.type] == model.UpdateType.core:
+                    self.__updateCore(image)
+                elif self.__available_updates[image][model.Update.type] == model.UpdateType.protocol_adapter:
+                    self.__updateProtocolAdapter(image)
+                elif self.__available_updates[image][model.Update.type] == model.UpdateType.worker:
+                    self.__updateWorker(image)
+                del self.__available_updates[image]
+            else:
+                raise UpdateError("updating '{}' failed - {}".format(image, resp.status_code))
