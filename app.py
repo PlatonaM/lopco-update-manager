@@ -32,7 +32,7 @@ app.req_options.strip_url_path_trailing_slash = True
 
 routes = (
     ("/updates", api.Updates(updater)),
-    ("/updates/{update}", api.Update(updater)),
+    ("/updates/{update}", api.Update(updater))
 )
 
 for route in routes:
