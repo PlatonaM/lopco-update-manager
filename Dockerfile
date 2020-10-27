@@ -2,6 +2,8 @@ FROM python:3-alpine
 
 RUN apk update && apk upgrade && apk add git
 
+RUN mkdir /lopco_core
+
 WORKDIR /usr/src/app
 
 COPY . .
