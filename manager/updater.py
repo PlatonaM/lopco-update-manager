@@ -28,6 +28,8 @@ import datetime
 import requests
 import time
 import json
+import uuid
+import os
 
 
 logger = getLogger(__name__.split(".", 1)[-1])
@@ -140,6 +142,34 @@ class Updater(threading.Thread):
             self.__available_updates.clear()
             self.__lock.release()
             raise CheckUpdatesError("checking for updates failed - {}".format(ex))
+
+    def __updateCore(self, image):
+        path = "{}/{}".format(conf.Core.path, uuid.uuid4())
+        with open(path, "w") as file:
+            file.write(image.split("/")[-1].split(":")[0].replace("lopco-", ""))
+        with open(path, "r") as file:
+            start = time.time()
+            while True:
+                line = file.readline()
+                if not line:
+                    time.sleep(conf.Core.delay)
+                else:
+                    line = line.strip()
+                    if line == "0":
+                        os.remove(path)
+                        break
+                    elif line == "1":
+                        os.remove(path)
+                        raise UpdateError("redeploying container for '{}' failed".format(image))
+                if time.time() - start >= conf.Core.timeout:
+                    os.remove(path)
+                    raise UpdateError("timeout while redeploying container for '{}'".format(image))
+
+    def __updateProtocolAdapter(self, image):
+        pass
+
+    def __updateWorker(self, image):
+        pass
 
     def run(self) -> None:
         while True:
