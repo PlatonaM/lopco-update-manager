@@ -26,6 +26,9 @@ class Conf:
     @simple_env_var.section
     class Core:
         images = None
+        path = "/lopco_core"
+        delay = 5
+        timeout = 90
 
     @simple_env_var.section
     class DeploymentManager:
