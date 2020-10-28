@@ -146,7 +146,7 @@ class Updater(threading.Thread):
     def __updateCore(self, image):
         path = "{}/{}".format(conf.Core.path, uuid.uuid4())
         with open(path, "w") as file:
-            file.write(image.split("/")[-1].split(":")[0].replace("lopco-", ""))
+            file.write(image.split("/")[-1].split(":")[0])
         with open(path, "r") as file:
             start = time.time()
             while True:
