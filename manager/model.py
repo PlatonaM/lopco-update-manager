@@ -32,3 +32,32 @@ class UpdateType:
 
 class Entity:
     name = "name"
+
+
+class Container:
+    labels = "labels"
+    ports = "ports"
+    environment = "environment"
+
+
+class CLabels:
+    lopco_id = "lopco-id"
+    lopco_type = "lopco-type"
+
+
+class Deployment:
+    id = "id"
+    type = "type"
+    ports = "ports"
+    configs = "configs"
+
+
+class ProtoAdapter:
+    name = "name"
+    description = "description"
+    ports = "ports"
+
+
+class PAPorts:
+    port = "port"
+    protocol = "protocol"
