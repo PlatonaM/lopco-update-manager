@@ -166,10 +166,76 @@ class Updater(threading.Thread):
                     raise UpdateError("timeout while redeploying container for '{}'".format(image))
 
     def __updateProtocolAdapter(self, image):
-        pass
+        protocol_adapters = dict()
+        if self.__available_updates[image][model.Update.entities]:
+            resp = requests.get(url="{}/{}?type=protocol-adapter".format(conf.DeploymentManager.url, conf.DeploymentManager.dp_api))
+            if resp.ok:
+                containers = resp.json()
+                for c_name, c_data in containers.items():
+                    if c_data[model.Container.labels][model.CLabels.lopco_id] in self.__available_updates[image][model.Update.entities]:
+                        if c_data[model.Container.labels][model.CLabels.lopco_id] not in protocol_adapters:
+                            resp = requests.get(
+                                url="{}/{}/{}".format(
+                                    conf.ProtocolAdapterRegistry.url,
+                                    conf.ProtocolAdapterRegistry.api,
+                                    c_data[model.Container.labels][model.CLabels.lopco_id]
+                                )
+                            )
+                            if resp.ok:
+                                protocol_adapters[c_data[model.Container.labels][model.CLabels.lopco_id]] = resp.json()
+                                del protocol_adapters[c_data[model.Container.labels][model.CLabels.lopco_id]][model.ProtoAdapter.name]
+                                del protocol_adapters[c_data[model.Container.labels][model.CLabels.lopco_id]][model.ProtoAdapter.description]
+                                protocol_adapters[c_data[model.Container.labels][model.CLabels.lopco_id]][model.Deployment.type] = model.UpdateType.protocol_adapter
+                                protocol_adapters[c_data[model.Container.labels][model.CLabels.lopco_id]][model.Deployment.ports] = {
+                                    "{}/{}".format(item[model.PAPorts.port], item[model.PAPorts.protocol]): None for item in protocol_adapters[c_data[model.Container.labels][model.CLabels.lopco_id]][model.ProtoAdapter.ports]
+                                }
+                            else:
+                                raise UpdateError(
+                                    "could not get protocol-adapter '{}' - {}".format(
+                                        c_data[model.Container.labels][model.CLabels.lopco_id],
+                                        resp.status_code
+                                    )
+                                )
+                        deployment = protocol_adapters[c_data[model.Container.labels][model.CLabels.lopco_id]].copy()
+                        deployment[model.Deployment.id] = c_data[model.Container.labels][model.CLabels.lopco_id]
+                        for key in deployment[model.Deployment.configs].keys():
+                            try:
+                                deployment[model.Deployment.configs][key] = c_data["environment"][key]
+                            except KeyError:
+                                if deployment[model.Deployment.configs][key]:
+                                    logger.warning("using default value for config option '{}'".format(key))
+                                else:
+                                    raise UpdateError("no value for config option '{}'".format(key))
+                        for key in deployment[model.Deployment.ports].keys():
+                            try:
+                                deployment[model.Deployment.ports][key] = c_data[model.Container.ports][key]
+                            except KeyError:
+                                raise UpdateError("no port-mapping for '{}'".format(key))
+                        logger.debug(deployment)
+                        resp = requests.delete(
+                            url="{}/{}/{}".format(conf.DeploymentManager.url, conf.DeploymentManager.dp_api, c_name)
+                        )
+                        if resp.ok:
+                            resp = requests.post(
+                                url="{}/{}".format(
+                                    conf.DeploymentManager.url,
+                                    conf.DeploymentManager.dp_api),
+                                json=deployment
+                            )
+                            if not resp.ok:
+                                raise UpdateError(
+                                    "could not deploy container for '{}' - {}".format(
+                                        deployment[model.Deployment.id],
+                                        resp.status_code
+                                    )
+                                )
+                        else:
+                            raise UpdateError("could not remove container '{}' - {}".format(c_name, resp.status_code))
+            else:
+                raise UpdateError("could not retrieve containers - {}".format(resp.status_code))
 
-    def __updateWorker(self, image):
-        pass
+    # def __updateWorker(self, image):
+    #     pass
 
     def run(self) -> None:
         while True:
@@ -206,8 +272,8 @@ class Updater(threading.Thread):
                     self.__updateCore(image)
                 elif self.__available_updates[image][model.Update.type] == model.UpdateType.protocol_adapter:
                     self.__updateProtocolAdapter(image)
-                elif self.__available_updates[image][model.Update.type] == model.UpdateType.worker:
-                    self.__updateWorker(image)
+                # elif self.__available_updates[image][model.Update.type] == model.UpdateType.worker:
+                #     self.__updateWorker(image)
                 del self.__available_updates[image]
             else:
                 raise UpdateError("updating '{}' failed - {}".format(image, resp.status_code))
