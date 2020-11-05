@@ -49,6 +49,7 @@ class Conf:
 
     @simple_env_var.section
     class Update:
+        automatic = True
         interval = 10800
         hour = 1
         minute = 30
