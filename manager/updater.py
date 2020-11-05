@@ -238,6 +238,7 @@ class Updater(threading.Thread):
     #     pass
 
     def run(self) -> None:
+        logger.info("automatic update check enabled")
         while True:
             try:
                 time.sleep(getDelay())
