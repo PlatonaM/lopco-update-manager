@@ -24,7 +24,9 @@ import falcon
 initLogger(conf.Logger.level)
 
 updater = Updater()
-updater.start()
+
+if conf.Update.automatic:
+    updater.start()
 
 app = falcon.API()
 
