@@ -1,4 +1,4 @@
 falcon<3.0.0
-gunicorn
+gunicorn<21.0.0
 git+https://github.com/y-du/simple-env-var-manager.git@1.0.2
-requests
+requests<3.0.0
